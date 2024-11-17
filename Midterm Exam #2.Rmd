@@ -1,0 +1,334 @@
+---
+title: 'Midterm Exam #2'
+author: "Simmons, Nev"
+date: "2024-11-17"
+output: html_document
+---
+
+#Initial Startup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) #Eliminates errors and long messages
+```
+
+```{r}
+library(tidyverse)
+library(maps)
+library(tidyverse)
+library(ggthemes)
+library(readxl)
+library(patchwork)
+```
+
+#Problem 1
+
+```{r}
+Production <- read.csv("https://raw.githubusercontent.com/oconnellmj/sta309/main/milk-production-tonnes.csv")
+Production <- Production %>%
+  mutate(Entity = ifelse(Entity == "United States", "USA", Entity)) %>%
+  mutate(Entity = ifelse(Entity == "USSR", "Russia", Entity)) %>%
+  mutate(Entity = ifelse(Entity == "United Kingdom", "UK", Entity)) %>%
+  mutate(Entity = ifelse(Entity == "Democratic Republic of Congo", "Democratic Republic of the Congo", Entity)) %>%
+  mutate(Entity = ifelse(Entity == "Congo", "Republic of Congo", Entity)) %>%
+  mutate(Entity = ifelse(Entity == "Cote d'Ivoire", "Ivory Coast", Entity))
+Consumption <- read.csv("https://raw.githubusercontent.com/oconnellmj/sta309/main/per-capita-milk-consumption.csv")
+Consumption <- Consumption %>%
+  mutate(Entity = ifelse(Entity == "United States", "USA", Entity)) %>%
+  mutate(Entity = ifelse(Entity == "USSR", "Russia", Entity)) %>%
+  mutate(Entity = ifelse(Entity == "United Kingdom", "UK", Entity)) %>%
+  mutate(Entity = ifelse(Entity == "Democratic Republic of Congo", "Democratic Republic of the Congo", Entity)) %>%
+  mutate(Entity = ifelse(Entity == "Congo", "Republic of Congo", Entity)) %>%
+  mutate(Entity = ifelse(Entity == "Cote d'Ivoire", "Ivory Coast", Entity))
+world_map <- map_data("world") %>%
+  mutate(Entity = region)
+```
+
+```{r}
+ProductionAvg <- Production %>%
+  group_by(Entity) %>%
+  summarize(AVG = mean(Milk.Production..tonnes., na.rm = TRUE))
+```
+
+```{r}
+ConsumptionAvg <- Consumption %>%
+  group_by(Entity) %>%
+  summarize(AVG = mean(Milk.consumption..kilograms.per.year.per.capita., na.rm = TRUE))
+```
+
+```{r}
+wrldmilkprod <- world_map %>%
+  right_join(ProductionAvg, by = "Entity") %>%
+  filter(long < 179.9 & long > -179.9)   #Gets rid of lines connecting from Canada to Russia
+```
+
+```{r}
+wrldmilkcons <- world_map %>%
+  right_join(ConsumptionAvg, by = "Entity") %>%
+  filter(long < 179.9 & long > -179.9)
+```
+
+```{r}
+worldmilkproductionplot <- ggplot(wrldmilkprod, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = AVG), color = NA) +  # Remove border color
+  coord_map() +
+  labs(title = "Average Milk Production Across the World", fill = "Milk Production", 
+       subtitle = "Data is averaged from 1961-2022",
+       caption = "",
+       x = "Longitude",
+       y = "Latitude") + 
+  scale_fill_gradient2(low = "white", mid = "skyblue1", high = "navy", midpoint = 68) +
+  theme(plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+        panel.background = element_blank(),
+        plot.subtitle = element_text(hjust = 0.5, size = 10),
+        plot.caption = element_text(hjust = 0.5, size = 10)) #Center caption
+worldmilkproductionplot
+```
+
+```{r}
+worldmilkconsumptionplot <- ggplot(wrldmilkcons, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = AVG), color = NA) +  # Remove border color
+  coord_map() +
+  labs(title = "Average Milk Consumption Across the World", fill = "Milk Consumption", 
+       subtitle = "Data is averaged from 1961-2022",
+       caption = "",
+       x = "Longitude",
+       y = "Latitude") + 
+  scale_fill_gradient2(low = "white", mid = "skyblue1", high = "navy", midpoint = 68) +
+  theme(plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+        panel.background = element_blank(),
+        plot.subtitle = element_text(hjust = 0.5, size = 10),
+        plot.caption = element_text(hjust = 0.5, size = 10)) 
+worldmilkconsumptionplot
+```
+```{r}
+ProductionMaxMin <- Production %>%
+  filter(Entity %in% c("Niue", "Brunei", "Sao Tome and Principe", "French Guiana",
+                       "Grenada", "North Macedonia", "India", "USA", "Russia", 
+                       "Sudan", "Brazil", "New Zealand"))
+```
+
+```{r}
+ConsumptionMaxMin <- Consumption %>%
+  filter(Entity %in% c("Montenegro", "USA", "Australia", "Kazakhstan", "South Sudan", 
+                       "Argentina", "Democratic Republic of the Congo", "Laos", "Haiti",
+                       "Bolivia", "Papua New Guinea", "North Macedonia"))
+```
+
+```{r}
+ProdOverYears <- ggplot(ProductionMaxMin) +
+  geom_line(aes(x = Year, y = Milk.Production..tonnes., group = Entity)) +
+  scale_y_continuous(breaks = c(0.0e+00, 5.0e+07, 1.0e+08, 1.5e+08),
+                     labels = c("0", "50,000,000", "100,000,000", "150,000,000"),
+                     limits = c(0, 1.6e+08)) +
+  labs(title = "Comparing Milk Production Across Every Continent",
+       subtitle = "Each continent is highlighted with it's highest and lowest \
+       producer of milk.",
+       y = "Milk Production in Tonnes") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+        panel.background = element_blank(),
+        plot.subtitle = element_text(hjust = 0.5, size = 10),
+        plot.caption = element_text(hjust = 0.5, size = 10))
+ProdOverYears
+```
+
+```{r}
+ConsOverYears <- ggplot(ConsumptionMaxMin) +
+  geom_line(aes(x = Year, y = Milk.consumption..kilograms.per.year.per.capita., group = Entity)) +
+  labs(title = "Comparing Milk Consumption Across Every Continent",
+       subtitle = "Each continent is highlighted with it's highest and lowest \
+       consumer of milk.",
+       y = "Milk Consumption In Kg/Capita/Year") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+        panel.background = element_blank(),
+        plot.subtitle = element_text(hjust = 0.5, size = 10),
+        plot.caption = element_text(hjust = 0.5, size = 10))
+ConsOverYears
+```
+
+```{r}
+ProductionAndConsumption <- ProductionAvg %>%
+  inner_join(ConsumptionAvg, by = c("Entity")) %>%
+   mutate(MilkProductionAvg = AVG.x,
+         MilkConsumptionAvg = AVG.y) %>%
+  select(!c(AVG.x, AVG.y))
+```
+
+```{r}
+CorrelationMilkPlot <- ggplot(ProductionAndConsumption) +
+  geom_point(aes(x = MilkProductionAvg, y = MilkConsumptionAvg, group = Entity)) +
+  scale_x_log10(labels = scales::comma) +
+  scale_y_continuous(breaks = c(0, 100, 200, 300), limits = c(0,350)) +
+  labs(title = "Production Vs. Consumption of Milk",
+       subtitle = "Each point represents one countries' average across the span \
+       of 1961-2022.",
+       x = "Milk Production in Tonnes",
+       y = "Milk Consumption In Kg/Capita") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+        panel.background = element_blank(),
+        plot.subtitle = element_text(hjust = 0.5, size = 10),
+        plot.caption = element_text(hjust = 0.5, size = 10),
+        legend.position = "none")
+CorrelationMilkPlot
+```
+```{r, fig.width=16, fig.height=9}
+(worldmilkproductionplot + worldmilkconsumptionplot + CorrelationMilkPlot + ProdOverYears +
+   ConsOverYears)
+```
+
+
+#Problem 2
+
+```{r}
+library(ggwordcloud)
+library(tidytext)
+tswift <- read_csv("taylor_swift_genius_data.csv") %>%
+  filter(Album %in% c("folklore", "evermore"))
+
+evermore <- tswift %>%
+  filter(Album %in% c("evermore"))
+
+folklore <- tswift %>%
+  filter(Album %in% c("folklore"))
+```
+
+```{r}
+evermorewords <- evermore %>%
+  mutate(Album = "evermore") %>%
+  unnest_tokens(word, Lyrics)
+
+stopwords <- get_stopwords()
+
+stopwords <- data.frame(word = stopwords$word)
+```
+
+```{r}
+evermorewordscloud <- evermorewords %>%
+  anti_join(stopwords) %>%
+  group_by(word) %>%
+  summarize(N=n()) %>%
+  arrange(desc(N)) %>%
+  slice(1:100)
+```
+
+```{r}
+evermoreplot <- ggplot(evermorewordscloud, aes(label = word, size = N)) +
+  geom_text_wordcloud() +
+  scale_size_area(max_size = 20) +
+  theme_minimal()
+evermoreplot
+```
+
+```{r}
+folklorewords <- folklore %>%
+  mutate(Album = "folklore") %>%
+  unnest_tokens(word, Lyrics)
+```
+
+```{r}
+folklorewordscloud <- folklorewords %>%
+  anti_join(stopwords) %>%
+  group_by(word) %>%
+  summarize(N=n()) %>%
+  arrange(desc(N)) %>%
+  slice(1:100)
+```
+
+```{r}
+folkloreplot <- ggplot(folklorewordscloud, aes(label = word, size = N)) +
+  geom_text_wordcloud() +
+  scale_size_area(max_size = 20) +
+  theme_minimal()
+folkloreplot
+```
+
+```{r}
+word_sentiments <- get_sentiments("bing")
+evermoresentiment <- evermorewords %>%
+  anti_join(stopwords) %>%
+  inner_join(word_sentiments, by="word") %>%
+  select(!index)
+
+folkloresentiment <- folklorewords %>%
+  anti_join(stopwords) %>%
+  inner_join(word_sentiments, by="word") %>%
+  select(!index)
+
+evermoresentiment <- evermoresentiment %>%
+  group_by(Album, sentiment) %>%
+  summarize(N=n()) %>%
+  mutate(Prop=N/sum(N))
+
+folkloresentiment <- folkloresentiment %>%
+  group_by(Album, sentiment) %>%
+  summarize(N=n()) %>%
+  mutate(Prop=N/sum(N))
+```
+
+```{r}
+evermoresentimentplot <- ggplot(evermoresentiment) +
+  geom_col(aes(x=Album, y=Prop, fill=sentiment)) +
+  scale_fill_brewer(palette="Blues") +
+  coord_cartesian(expand=F) +
+  annotate("text", x=1, y=0.7, label="Negative\nWords") +
+  annotate("text", x=1, y=0.2, label="Positive\nWords") +
+  labs(title="Proportion of Positive and negative words",
+       subtitle="Taylor Swift's Evermore Album") +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        legend.position="none")
+evermoresentimentplot
+
+```
+
+
+```{r}
+folkloresentimentplot <- ggplot(folkloresentiment) +
+  geom_col(aes(x=Album, y=Prop, fill=sentiment)) +
+  scale_fill_brewer(palette="Blues") +
+  coord_cartesian(expand=F) +
+  annotate("text", x=1, y=0.7, label="Negative\nWords") +
+  annotate("text", x=1, y=0.2, label="Positive\nWords") +
+  labs(title="Proportion of Positive and negative words",
+       subtitle="Taylor Swift's Folklore Album") +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        legend.position="none")
+folkloresentimentplot
+
+```
+
+```{r}
+tswiftdiscography <- read_csv("taylor_swift_spotify_data.csv") %>%
+  filter(Album %in% c("folklore", "evermore")) %>%
+  mutate(`Song Name` = ifelse(`Song Name` == "no body, no crime (feat. HAIM)", 
+                              "no body, no crime",`Song Name` )) %>%
+  mutate(`Song Name` = ifelse(`Song Name` == "coney island (feat. The National)", 
+                              "coney island",`Song Name` )) %>%
+  mutate(`Song Name` = ifelse(`Song Name` == "evermore (feat. Bon Iver)", 
+                              "evermore",`Song Name` )) %>%
+  mutate(`Song Name` = ifelse(`Song Name` == "exile (feat. Bon Iver)", 
+                              "exile",`Song Name` ))
+```
+
+```{r}
+song_sentiments <- tswift %>%
+  unnest_tokens(word, Lyrics) %>%
+  anti_join(stopwords) %>%
+  inner_join(word_sentiments, by="word") %>%
+  group_by(`Song Name`, sentiment, Album) %>%
+  summarize(N=n()) %>%
+  ungroup() %>%
+  group_by(`Song Name`) %>%
+  mutate(Prop=N/sum(N)) %>%
+  ungroup() %>%
+  filter(sentiment == "positive")
+```
+
+```{r}
+SwiftAttributes <- song_sentiments %>%
+  inner_join(tswiftdiscography, by = "Song Name")
+```
