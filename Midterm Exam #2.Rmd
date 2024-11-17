@@ -107,25 +107,41 @@ worldmilkconsumptionplot
 ProductionMaxMin <- Production %>%
   filter(Entity %in% c("Niue", "Brunei", "Sao Tome and Principe", "French Guiana",
                        "Grenada", "North Macedonia", "India", "USA", "Russia", 
-                       "Sudan", "Brazil", "New Zealand"))
+                       "Sudan", "Brazil", "New Zealand")) %>%
+   mutate(Continent = case_when(
+     Entity %in% c("Brunei", "India") ~ "Asia",
+     Entity %in% c("Russia", "North Macedonia") ~ "Europe",
+     Entity %in% c("USA", "Grenada") ~ "North America",
+     Entity %in% c("Sao Tome and Principe", "Sudan") ~ "Africa",
+     Entity %in% c("Brazil", "French Guiana") ~ "South America",
+     Entity %in% c("Niue", "New Zealand") ~ "Australia"))
 ```
 
 ```{r}
 ConsumptionMaxMin <- Consumption %>%
   filter(Entity %in% c("Montenegro", "USA", "Australia", "Kazakhstan", "South Sudan", 
                        "Argentina", "Democratic Republic of the Congo", "Laos", "Haiti",
-                       "Bolivia", "Papua New Guinea", "North Macedonia"))
+                       "Bolivia", "Papua New Guinea", "North Macedonia")) %>%
+  mutate(Continent = case_when(
+     Entity %in% c("Kazakhstan", "Laos") ~ "Asia",
+     Entity %in% c("Montenegro", "North Macedonia") ~ "Europe",
+     Entity %in% c("USA", "Haiti") ~ "North America",
+     Entity %in% c("Democratic Republic of the Congo", "South Sudan") ~ "Africa",
+     Entity %in% c("Bolivia", "Argentina") ~ "South America",
+     Entity %in% c("Papua New Guinea", "Australia") ~ "Australia"))
 ```
 
 ```{r}
 ProdOverYears <- ggplot(ProductionMaxMin) +
-  geom_line(aes(x = Year, y = Milk.Production..tonnes., group = Entity)) +
+  geom_line(aes(x = Year, y = Milk.Production..tonnes., group = Entity, color = Continent)) +
   scale_y_continuous(breaks = c(0.0e+00, 5.0e+07, 1.0e+08, 1.5e+08),
                      labels = c("0", "50,000,000", "100,000,000", "150,000,000"),
                      limits = c(0, 1.6e+08)) +
   labs(title = "Comparing Milk Production Across Every Continent",
        subtitle = "Each continent is highlighted with it's highest and lowest \
        producer of milk.",
+       caption = "Russia Leads the way as the largest producer of milk as of 2022,
+       with USA in second.\ Africa holds the smallest producers of milk across the board.",
        y = "Milk Production in Tonnes") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
@@ -137,10 +153,13 @@ ProdOverYears
 
 ```{r}
 ConsOverYears <- ggplot(ConsumptionMaxMin) +
-  geom_line(aes(x = Year, y = Milk.consumption..kilograms.per.year.per.capita., group = Entity)) +
+  geom_line(aes(x = Year, y = Milk.consumption..kilograms.per.year.per.capita., group = Entity,
+                color = Continent)) +
   labs(title = "Comparing Milk Consumption Across Every Continent",
        subtitle = "Each continent is highlighted with it's highest and lowest \
        consumer of milk.",
+       caption = "Montenegro Leads the way in milk consumption per capita \
+       with Africa consuming the least in both maximum and minimum values.",
        y = "Milk Consumption In Kg/Capita/Year") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
@@ -166,6 +185,8 @@ CorrelationMilkPlot <- ggplot(ProductionAndConsumption) +
   labs(title = "Production Vs. Consumption of Milk",
        subtitle = "Each point represents one countries' average across the span \
        of 1961-2022.",
+       caption = "These two variables seem to be somewhat correlated on a worldwide \
+       spectrum. As the production increases, the consumption generally increases as well.",
        x = "Milk Production in Tonnes",
        y = "Milk Consumption In Kg/Capita") +
   theme_minimal() +
@@ -177,8 +198,13 @@ CorrelationMilkPlot <- ggplot(ProductionAndConsumption) +
 CorrelationMilkPlot
 ```
 ```{r, fig.width=16, fig.height=9}
-(worldmilkproductionplot + worldmilkconsumptionplot + CorrelationMilkPlot + ProdOverYears +
+Dashboard1 <- (worldmilkproductionplot + worldmilkconsumptionplot + CorrelationMilkPlot + ProdOverYears +
    ConsOverYears)
+Dashboard1
+```
+
+```{r}
+ggsave("MidtermExam2-Dashboard1.png", Dashboard1, width = 16, height = 9, dpi = 300)
 ```
 
 
@@ -347,6 +373,8 @@ Danceabilityplot <- ggplot(SwiftAttributes) +
    labs(title = "Danceability vs. Positive Sentiment in Swift Albums",
        subtitle = "Evermore and Folklore albums positive sentiment \
        and it's correlation with danceability.",
+       caption = "These variables might be slightly correlated in terms of a more \
+       positive sentiment song predicting a higher danceability factor.",
        x = "Positive Sentiment") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
@@ -361,6 +389,7 @@ Tempoplot <- ggplot(SwiftAttributes) +
    labs(title = "Tempo vs. Positive Sentiment in Swift Albums",
        subtitle = "Evermore and Folklore albums positive sentiment \
        and it's correlation with Tempo.",
+       caption = "These variables don't appear to have any correlation based on this plot.",
        x = "Positive Sentiment") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
@@ -373,5 +402,14 @@ Tempoplot
 library(patchwork)
 (evermoreplot | folkloreplot) / (evermoresentimentplot | folkloresentimentplot) /
   (Danceabilityplot | Tempoplot)
+```
+```{r, fig.width=14, fig.height=18}
+Dashboard2 <- (evermoreplot | folkloreplot) / (evermoresentimentplot | folkloresentimentplot) /
+  (Danceabilityplot | Tempoplot)
+```
+
+
+```{r}
+ggsave("MidtermExam2-Dashboard2.png", Dashboard2, width = 14, height = 18, dpi = 300)
 ```
 
