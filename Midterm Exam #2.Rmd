@@ -186,7 +186,7 @@ CorrelationMilkPlot <- ggplot(ProductionAndConsumption) +
        subtitle = "Each point represents one countries' average across the span \
        of 1961-2022.",
        caption = "These two variables seem to be somewhat correlated on a worldwide \
-       spectrum. As the production increases, the consumption generally increases as well.",
+       spectrum. As the production increases, the consumption generally increases.",
        x = "Milk Production in Tonnes",
        y = "Milk Consumption In Kg/Capita") +
   theme_minimal() +
@@ -197,7 +197,7 @@ CorrelationMilkPlot <- ggplot(ProductionAndConsumption) +
         legend.position = "none")
 CorrelationMilkPlot
 ```
-```{r, fig.width=16, fig.height=9}
+```{r, fig.width=17, fig.height=9}
 Dashboard1 <- (worldmilkproductionplot + worldmilkconsumptionplot + CorrelationMilkPlot + ProdOverYears +
    ConsOverYears)
 Dashboard1
