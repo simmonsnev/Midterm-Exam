@@ -311,7 +311,9 @@ tswiftdiscography <- read_csv("taylor_swift_spotify_data.csv") %>%
   mutate(`Song Name` = ifelse(`Song Name` == "evermore (feat. Bon Iver)", 
                               "evermore",`Song Name` )) %>%
   mutate(`Song Name` = ifelse(`Song Name` == "exile (feat. Bon Iver)", 
-                              "exile",`Song Name` ))
+                              "exile",`Song Name` )) %>%
+  mutate(`Song Name` = str_trim(`Song Name`)) %>%
+  mutate(`Song Name` = str_replace_all(`Song Name`, "‘", "'"))
 ```
 
 ```{r}
@@ -326,9 +328,48 @@ song_sentiments <- tswift %>%
   mutate(Prop=N/sum(N)) %>%
   ungroup() %>%
   filter(sentiment == "positive")
+song_sentiments <- song_sentiments %>%
+  mutate(`Song Name` = str_trim(`Song Name`)) %>%
+  mutate(`Song Name` = str_replace_all(`Song Name`, "‘", "'")) %>%
+  mutate(`Song Name` = str_replace_all(`Song Name`, "​", ""))
 ```
 
 ```{r}
 SwiftAttributes <- song_sentiments %>%
   inner_join(tswiftdiscography, by = "Song Name")
 ```
+
+```{r}
+Danceabilityplot <- ggplot(SwiftAttributes) +
+  geom_point(aes(x = Prop, y = Danceability, group = Album.x, color = Album.x)) +
+   labs(title = "Danceability vs. Positive Sentiment in Swift Albums",
+       subtitle = "Evermore and Folklore albums positive sentiment \
+       and it's correlation with danceability.",
+       x = "Positive Sentiment") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+        panel.background = element_blank(),
+        plot.subtitle = element_text(hjust = 0.5, size = 10),
+        plot.caption = element_text(hjust = 0.5, size = 10)) 
+Danceabilityplot
+```
+```{r}
+Tempoplot <- ggplot(SwiftAttributes) +
+  geom_point(aes(x = Prop, y = Tempo, group = Album.x, color = Album.x)) +
+   labs(title = "Tempo vs. Positive Sentiment in Swift Albums",
+       subtitle = "Evermore and Folklore albums positive sentiment \
+       and it's correlation with Tempo.",
+       x = "Positive Sentiment") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+        panel.background = element_blank(),
+        plot.subtitle = element_text(hjust = 0.5, size = 10),
+        plot.caption = element_text(hjust = 0.5, size = 10)) 
+Tempoplot
+```
+```{r, fig.width=14, fig.height=18}
+library(patchwork)
+(evermoreplot | folkloreplot) / (evermoresentimentplot | folkloresentimentplot) /
+  (Danceabilityplot | Tempoplot)
+```
+
