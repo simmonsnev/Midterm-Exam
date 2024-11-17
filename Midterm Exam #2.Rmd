@@ -13,7 +13,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE) #Eliminates errors and l
 ```
 
 ```{r}
-library(tidyverse)
+library(tidyverse)  #Loads in Data
 library(maps)
 library(tidyverse)
 library(ggthemes)
@@ -25,7 +25,7 @@ library(patchwork)
 
 ```{r}
 Production <- read.csv("https://raw.githubusercontent.com/oconnellmj/sta309/main/milk-production-tonnes.csv")
-Production <- Production %>%
+Production <- Production %>%   #Loads in data and changes names to fit the other dataset
   mutate(Entity = ifelse(Entity == "United States", "USA", Entity)) %>%
   mutate(Entity = ifelse(Entity == "USSR", "Russia", Entity)) %>%
   mutate(Entity = ifelse(Entity == "United Kingdom", "UK", Entity)) %>%
@@ -74,7 +74,8 @@ worldmilkproductionplot <- ggplot(wrldmilkprod, aes(x = long, y = lat, group = g
   coord_map() +
   labs(title = "Average Milk Production Across the World", fill = "Milk Production", 
        subtitle = "Data is averaged from 1961-2022",
-       caption = "",
+       caption = "United States, Russia, India stand out as the major producers \
+       of milk across the world. ",
        x = "Longitude",
        y = "Latitude") + 
   scale_fill_gradient2(low = "white", mid = "skyblue1", high = "navy", midpoint = 68) +
@@ -91,7 +92,8 @@ worldmilkconsumptionplot <- ggplot(wrldmilkcons, aes(x = long, y = lat, group = 
   coord_map() +
   labs(title = "Average Milk Consumption Across the World", fill = "Milk Consumption", 
        subtitle = "Data is averaged from 1961-2022",
-       caption = "",
+       caption = "Europe seems to be a top consumer of milk, \ and the consumption
+       appears to be less varied than production.",
        x = "Longitude",
        y = "Latitude") + 
   scale_fill_gradient2(low = "white", mid = "skyblue1", high = "navy", midpoint = 68) +
