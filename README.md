@@ -1,6 +1,9 @@
 # Midterm-Exam-2 Submission
 # Nev Simmons
 
+
+Project Description
+
 Dashboard 1 Summary:
 
 World Map was used to show an averaged production/consumption value for each 
